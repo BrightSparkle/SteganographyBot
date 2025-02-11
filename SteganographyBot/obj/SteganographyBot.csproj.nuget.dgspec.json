@@ -51,6 +51,10 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
+            "System.Drawing.Common": {
+              "target": "Package",
+              "version": "[9.0.1, )"
+            },
             "Telegram.Bot": {
               "target": "Package",
               "version": "[22.3.0, )"

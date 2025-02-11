@@ -1,45 +1,70 @@
 using System.Collections;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Net.Mime;
 using SteganographyBot.Bot;
+using StegBot.Bot;
 
 namespace SteganographyBot;
 
 public class Encryptor
 {
-    private EncryptionHelper _encryptionHelper;
+    private readonly string _startPoint = "@startpoint";
+    private readonly string _endPoint = "@endpoint";
 
     public Encryptor()
     {
-        _encryptionHelper = new EncryptionHelper();
+       
     }
     
-    public byte[] EncryptStringMessage(byte[] image, byte[] message, bool skipAlpha)
-    {
-        //Convert the byte arrays to bit arrays.
-        BitArray imageBits = new BitArray(image);
-        BitArray messageBits = new BitArray(message);
+    public async Task<MemoryStream> EncryptStringMessageIntoImage(Stream photo, string message)
+    { 
+        string content = _startPoint + message + _endPoint;
+       var image = new Bitmap(photo);
+       var bmp = (Bitmap)image.Clone();
 
-        //The image needs at least 24 bytes to hold the message size information.
-        //The message will begin at the 24th byte of the image (192 bits).
+       string binaryContent = SteganographyHelper.UnicodeStringToBinary(content);
+       
+       byte[] newnumber = new byte[3];
 
-        _encryptionHelper.ValidateImageCapacity(imageBits.Count, messageBits.Count, skipAlpha);
+       //proccess bits in image
+       for (int x = 0; x < image.Width; x++)
+       {
+           for (int y = 0; y < image.Height; y++)
+           {
+               if (binaryContent.Length.Equals(0))
+               {
+                   break;
+               }
 
-        //In the first 24 bytes set the size of the message we are going to hide, 
-        //this will be used later when decrypting:
+               Color pixel = image.GetPixel(x, y);
+               var pixelColors = SteganographyHelper.ToBinary(pixel);
 
-        //Transform the message size into a bit array
-        BitArray sizeInBits = EncryptionHelper.IntToBitArray(messageBits.Count);
+               //note:some case 2 or 4 bits left we need to check if its lastone or not
+               pixelColors.red = SteganographyHelper.ReplaceFirstBits(pixelColors.red,!binaryContent.Length.Equals(0) ?
+                   binaryContent.Substring(0, 2) : pixelColors.red.Substring(6, 2));
+               binaryContent = binaryContent.Length.Equals(0) ? string.Empty : binaryContent.Remove(0, 2);
 
-        //DEFINE SIZE
+               pixelColors.green = SteganographyHelper.ReplaceFirstBits(pixelColors.green,binaryContent.Length.Equals(0) ?
+                   binaryContent.Substring(0, 2) : pixelColors.green.Substring(6, 2));
+               binaryContent = binaryContent.Length.Equals(0) ? string.Empty : binaryContent.Remove(0, 2);
 
-        EncryptionHelper.EmbedSizeBits(imageBits, sizeInBits, 0, skipAlpha);
+               pixelColors.blue = SteganographyHelper.ReplaceFirstBits(pixelColors.blue,binaryContent.Length.Equals(0) ?
+                   binaryContent.Substring(0, 2) : pixelColors.blue.Substring(6, 2));
+               binaryContent = binaryContent.Length.Equals(0) ? string.Empty : binaryContent.Remove(0, 2);
 
-        //DEFINE MESSAGE
+               //Convert binary to number
+               newnumber = (pixelColors.red + pixelColors.green + pixelColors.blue).ConvertBinaryStringToByteArray();
+               var newColor = Color.FromArgb(int.Parse(newnumber[0].ToString()), int.Parse(newnumber[1].ToString()), int.Parse(newnumber[2].ToString()));
+               bmp.SetPixel(x, y, newColor);
+           }
+       }
 
-        byte[] imageEncrypted = EncryptionHelper.EmbedMessage(imageBits, messageBits, skipAlpha);
-
-        return imageEncrypted;
+       var ms = new MemoryStream();
+       bmp.Save(ms, ImageFormat.Png);
+       ms.Seek(0, SeekOrigin.Begin);
+       return ms;
+       
     }
     
    

@@ -1,32 +1,73 @@
 using System.Collections;
+using System.Drawing;
 using SteganographyBot.Bot;
+using StegBot.Bot;
 
 namespace SteganographyBot;
 
 public class Decryptor
 {
-    private DectyptorHelper _dectyptorHelper;
-
+    private readonly string _startPoint = "@startpoint";
+    private readonly string _endPoint = "@endpoint";
     public Decryptor()
     {
-        _dectyptorHelper = new DectyptorHelper();
+        
     }
     
-    public byte[] DecryptStringMessage(byte[] image, bool skipAlpha)
-    {
-        //Transfome bytes to bits.
-        BitArray imageBits = new BitArray(image);
+    
+    public async Task<string> DecodeImage(Stream image){
 
-        //Get the size of the message we'll have to decrypt, at the beginning of the image.
-        int messageSize = _dectyptorHelper.RetrieveMessageSize(imageBits, 0, skipAlpha);
+        Bitmap img = new Bitmap(image);
 
-        //Empty array of bits the size of the message size we just got.
-        BitArray messageBits = new BitArray(messageSize);
+        //holds the new bits extract from image
+        string bits = "";
+        string extractedtext = "";
+        bool shouldBreak = false;
+        for (int x = 0; x < img.Width; x++)
+        {
+            if (shouldBreak)
+            {
+                break;
+            }
 
-        //Decrypts the message.
+            for (int y = 0; y < img.Height; y++)
+            {
 
-        byte[] messageDecrypted = _dectyptorHelper.ExtractHiddenMessage(imageBits, messageBits, skipAlpha);
+                if (extractedtext.Length >= _startPoint.Length && !extractedtext.Contains(_startPoint))
+                {
+                    //nothin in the picture
+                    shouldBreak = true;
+                    extractedtext = "No content found, Please send image with original format as file.";
+                    break;
+                }
 
-        return messageDecrypted;
+                if (extractedtext.Contains(_endPoint))
+                {
+                    extractedtext = extractedtext
+                        .Replace(_startPoint, string.Empty)
+                        .Replace(_endPoint, string.Empty);
+
+                    shouldBreak = true;
+                    break;
+                }
+
+                Color pixel = img.GetPixel(x, y);
+                var colors = SteganographyHelper.ToBinary(pixel);
+                //read each pixel rgb first bits
+                bits += SteganographyHelper.ReadFirstBits(colors.red,2) + SteganographyHelper.ReadFirstBits(colors.green,2) + SteganographyHelper.ReadFirstBits(colors.blue,2);
+                //if it isnt default
+                
+                    if (bits.Length >= 32)
+                    {
+                        extractedtext += SteganographyHelper.GetUnicodeTextFromBinary(bits.Substring(0, 32));
+                        bits = bits.Remove(0, 32);
+                    }
+                
+                
+            }
+        }
+
+        return extractedtext;
     }
+    
 }

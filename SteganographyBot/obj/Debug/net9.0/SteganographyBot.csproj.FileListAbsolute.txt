@@ -17,3 +17,8 @@ C:\Users\ekate\OneDrive\Desktop\Всякая разная фигня\Учёба\
 C:\Users\ekate\OneDrive\Desktop\Всякая разная фигня\Учёба\Вуз\SteganographyBot\SteganographyBot\obj\Debug\net9.0\SteganographyBot.pdb
 C:\Users\ekate\OneDrive\Desktop\Всякая разная фигня\Учёба\Вуз\SteganographyBot\SteganographyBot\obj\Debug\net9.0\SteganographyBot.genruntimeconfig.cache
 C:\Users\ekate\OneDrive\Desktop\Всякая разная фигня\Учёба\Вуз\SteganographyBot\SteganographyBot\obj\Debug\net9.0\ref\SteganographyBot.dll
+C:\Users\ekate\OneDrive\Desktop\Всякая разная фигня\Учёба\Вуз\SteganographyBot\SteganographyBot\bin\Debug\net9.0\Microsoft.Win32.SystemEvents.dll
+C:\Users\ekate\OneDrive\Desktop\Всякая разная фигня\Учёба\Вуз\SteganographyBot\SteganographyBot\bin\Debug\net9.0\System.Drawing.Common.dll
+C:\Users\ekate\OneDrive\Desktop\Всякая разная фигня\Учёба\Вуз\SteganographyBot\SteganographyBot\bin\Debug\net9.0\System.Private.Windows.Core.dll
+C:\Users\ekate\OneDrive\Desktop\Всякая разная фигня\Учёба\Вуз\SteganographyBot\SteganographyBot\bin\Debug\net9.0\runtimes\win\lib\net9.0\Microsoft.Win32.SystemEvents.dll
+C:\Users\ekate\OneDrive\Desktop\Всякая разная фигня\Учёба\Вуз\SteganographyBot\SteganographyBot\obj\Debug\net9.0\SteganographyBot.sourcelink.json

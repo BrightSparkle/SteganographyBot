@@ -1,4 +1,6 @@
+using System.Drawing;
 using System.Text;
+using StegBot.Bot;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -34,6 +36,10 @@ public class CommandHandler
                 break;
 
             case MessageType.Photo:
+                await HandlePhotoAsync(telegramClient, update, chatId);
+                break;
+            
+            case MessageType.Document:
                 await HandlePhotoAsync(telegramClient, update, chatId);
                 break;
 
@@ -128,83 +134,57 @@ public class CommandHandler
 
 
         if (_chatStates[chatId] == ChatState.AwaitingImageAndText)
+        {
             await ProcessImageForEncoding(botClient, update, chatId);
+            _chatStates[chatId] = ChatState.Base;
+        }
         else if (_chatStates[chatId] == ChatState.AwaitingDecodeImage)
+        {
             await ProcessImageForDecoding(botClient, update, chatId);
+            _chatStates[chatId] = ChatState.Base;
+        }
     }
 
 
     // Process image for encoding
     private async Task ProcessImageForEncoding(ITelegramBotClient botClient, Update update, long chatId)
     {
-        var photo = update.Message.Photo[0];
-        var file = await botClient.GetFile(photo.FileId);
+        var image = new MemoryStream();
+        var photo = update.Message.Photo.Last();
+        var file = await botClient.GetFileAsync(photo.FileId);
+        await botClient.DownloadFile(file.FilePath!, image);
+        string caption = update.Message.Caption;
 
-        using (var fileStream = new MemoryStream())
-        {
-            await botClient.DownloadFile(file.FilePath, fileStream);
-            var imageBytes = fileStream.ToArray();
-            var caption = update.Message.Caption;
+        botClient.SendPhoto(update.Message.Chat.Id, image);
+        botClient.SendMessage(update.Message!.Chat.Id,"Start encoding ...");
+        
+        var result = await _encryptor.EncryptStringMessageIntoImage(image, caption);
+        InputFileStream encodedPicutre = new(result, DateTime.Now + ".png");
+        
+        Message sentMessage = await botClient.SendDocumentAsync(update.Message!.Chat.Id,encodedPicutre);
 
-            if (!string.IsNullOrEmpty(caption))
-            {
-                var encodedImage = _encryptor.EncryptStringMessage(imageBytes, Encoding.UTF8.GetBytes(caption), false);
-                await SendEncodedImage(botClient, chatId, encodedImage, caption);
-            }
-            else
-            {
-                await botClient.SendMessage(chatId, "Please send an image with a non-empty caption for encoding.");
-            }
-
-            _chatStates[chatId] = ChatState.Base;
-        }
     }
 
 
-    // Send encoded image
-    public async Task SendEncodedImage(ITelegramBotClient botClient, long chatId, byte[] encodedImage, string caption)
-    {
-        try
-        {
-            // Попытка отправить изображение
-            using (var stream = new MemoryStream(encodedImage))
-            {
-                var photo = new InputFileStream(stream, "encoded_image.jpg");
-                await botClient.SendDocument(chatId, photo, caption);
-            }
-        }
-        catch (Exception ex)
-        {
-            // Логирование ошибки Telegram Bot API
-            Console.WriteLine($"Ошибка Telegram API: {ex.Message}");
-            // Дополнительно можно отправить сообщение об ошибке администратору
-            await botClient.SendMessage(chatId, "Произошла ошибка при обработке изображения.");
-        }
-    }
-
+ 
 
     // Process image for decoding
     private async Task ProcessImageForDecoding(ITelegramBotClient botClient, Update update, long chatId)
     {
-        var photo = update.Message.Photo?[0];
-        var file = await botClient.GetFile(photo?.FileId);
+        var image = new MemoryStream();
+        var photo = update!.Message!.Document!;
+        var file = await botClient.GetFileAsync(photo.FileId);
+        await botClient.DownloadFile(file.FilePath!, image);
+        String caption = update.Message.Caption;
 
-        using (var fileStream = new MemoryStream())
+        if (String.IsNullOrEmpty(caption))
         {
-            await botClient.DownloadFile(file.FilePath, fileStream);
-            var imageBytes = fileStream.ToArray();
-
-            if (string.IsNullOrEmpty(update.Message.Caption))
-            {
-                var decodedText = Encoding.UTF8.GetString(_decryptor.DecryptStringMessage(imageBytes, false));
-                await botClient.SendMessage(chatId, decodedText);
-            }
-            else
-            {
-                await botClient.SendMessage(chatId, "Please send an image without caption for decoding.");
-            }
-
-            _chatStates[chatId] = ChatState.Base;
+            botClient.SendTextMessageAsync(update.Message!.Chat.Id,"Start decoding ...");
+            var result = await _decryptor.DecodeImage(image);
+            
+            Message sentMessage = await botClient.SendTextMessageAsync(
+                chatId: update.Message!.Chat.Id,
+                text: result);
         }
     }
 }
