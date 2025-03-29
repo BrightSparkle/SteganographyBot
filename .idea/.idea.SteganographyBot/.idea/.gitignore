@@ -11,3 +11,72 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+
+# Добавить в существующий .gitignore:
+
+### .NET ###
+# Сборка и выходные файлы
+bin/
+obj/
+[Bb]uild/
+[Rr]elease/
+[Dd]ebug/
+**/[Pp]ublish/
+*.nupkg
+*.pdb
+*.dll.config
+
+# Файлы пользовательских настроек IDE
+*.user
+*.suo
+*.userprefs
+*.userosscache
+
+# Visual Studio
+.vs/
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln.iml
+
+# Rider (дополнение к существующему)
+.idea/
+*.dotCover
+*.sln.iml
+*.idea.*.xml
+
+# NuGet
+packages/
+**/packages/
+*.nupkg
+nuget.exe
+.nuget/
+NuGet.Config
+
+# Логи и кэш
+*.log
+*.cache
+*.vspscc
+*.vssscc
+*.backup
+*.tmp
+
+# Файлы окружения (если не хранятся в репозитории)
+*.env
+appsettings.Development.json
+appsettings.Local.json
+
+# Документация
+doc/_site/
+*.chm
+
+# Ресайлеры и аналитика
+_ReSharper*/
+*.resharper
+*.sublime-workspace
+
+# Другое
+*.swp
+*.sass-cache/
+.DS_Store
+Thumbs.db

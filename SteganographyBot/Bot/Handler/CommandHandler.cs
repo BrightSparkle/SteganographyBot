@@ -154,15 +154,23 @@ public class CommandHandler
         var file = await botClient.GetFileAsync(photo.FileId);
         await botClient.DownloadFile(file.FilePath!, image);
         string caption = update.Message.Caption;
-
-        botClient.SendPhoto(update.Message.Chat.Id, image);
-        botClient.SendMessage(update.Message!.Chat.Id,"Start encoding ...");
         
-        var result = await _encryptor.EncryptStringMessageIntoImage(image, caption);
-        InputFileStream encodedPicutre = new(result, DateTime.Now + ".png");
-        
-        Message sentMessage = await botClient.SendDocumentAsync(update.Message!.Chat.Id,encodedPicutre);
+        if (string.IsNullOrEmpty(update.Message.Caption))
+        {
+            var message = "Please upload your image with caption.";
+             await botClient.SendTextMessageAsync( chatId: update.Message!.Chat.Id, text: message);
+            return;
+        }
 
+            botClient.SendMessage(update.Message!.Chat.Id, "Start encoding ...");
+
+            var result = await _encryptor.EncryptStringMessageIntoImage(image, caption);
+            InputFileStream encodedPicutre = new(result, DateTime.Now + ".png");
+
+            await botClient.SendDocumentAsync(update.Message!.Chat.Id, encodedPicutre);
+
+            return;
+        
     }
 
 

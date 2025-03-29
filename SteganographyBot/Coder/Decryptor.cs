@@ -15,8 +15,9 @@ public class Decryptor
     }
     
     
-    public async Task<string> DecodeImage(Stream image){
-
+    public async Task<string> DecodeImage(Stream image)
+    {
+      await image.CopyToAsync(image);
         Bitmap img = new Bitmap(image);
 
         //holds the new bits extract from image
@@ -56,15 +57,16 @@ public class Decryptor
                 //read each pixel rgb first bits
                 bits += SteganographyHelper.ReadFirstBits(colors.red,2) + SteganographyHelper.ReadFirstBits(colors.green,2) + SteganographyHelper.ReadFirstBits(colors.blue,2);
                 //if it isnt default
-                
+
                     if (bits.Length >= 32)
                     {
                         extractedtext += SteganographyHelper.GetUnicodeTextFromBinary(bits.Substring(0, 32));
                         bits = bits.Remove(0, 32);
                     }
-                
-                
-            }
+                    Console.WriteLine(extractedtext);
+                }
+               
+            
         }
 
         return extractedtext;

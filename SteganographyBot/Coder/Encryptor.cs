@@ -25,6 +25,9 @@ public class Encryptor
 
        string binaryContent = SteganographyHelper.UnicodeStringToBinary(content);
        
+       Console.WriteLine(content);
+       Console.WriteLine(binaryContent);
+       
        byte[] newnumber = new byte[3];
 
        //proccess bits in image
@@ -45,16 +48,16 @@ public class Encryptor
                    binaryContent.Substring(0, 2) : pixelColors.red.Substring(6, 2));
                binaryContent = binaryContent.Length.Equals(0) ? string.Empty : binaryContent.Remove(0, 2);
 
-               pixelColors.green = SteganographyHelper.ReplaceFirstBits(pixelColors.green,binaryContent.Length.Equals(0) ?
+               pixelColors.green = SteganographyHelper.ReplaceFirstBits(pixelColors.green,!binaryContent.Length.Equals(0) ?
                    binaryContent.Substring(0, 2) : pixelColors.green.Substring(6, 2));
                binaryContent = binaryContent.Length.Equals(0) ? string.Empty : binaryContent.Remove(0, 2);
 
-               pixelColors.blue = SteganographyHelper.ReplaceFirstBits(pixelColors.blue,binaryContent.Length.Equals(0) ?
+               pixelColors.blue = SteganographyHelper.ReplaceFirstBits(pixelColors.blue,!binaryContent.Length.Equals(0) ?
                    binaryContent.Substring(0, 2) : pixelColors.blue.Substring(6, 2));
                binaryContent = binaryContent.Length.Equals(0) ? string.Empty : binaryContent.Remove(0, 2);
 
                //Convert binary to number
-               newnumber = (pixelColors.red + pixelColors.green + pixelColors.blue).ConvertBinaryStringToByteArray();
+               newnumber = SteganographyHelper.ConvertBinaryStringToByteArray(pixelColors.red + pixelColors.green + pixelColors.blue);
                var newColor = Color.FromArgb(int.Parse(newnumber[0].ToString()), int.Parse(newnumber[1].ToString()), int.Parse(newnumber[2].ToString()));
                bmp.SetPixel(x, y, newColor);
            }
@@ -62,7 +65,9 @@ public class Encryptor
 
        var ms = new MemoryStream();
        bmp.Save(ms, ImageFormat.Png);
+       
        ms.Seek(0, SeekOrigin.Begin);
+       Console.WriteLine(ms);
        return ms;
        
     }
