@@ -2,7 +2,7 @@ namespace SteganographyBot;
 
 public enum ChatState
 {
-    Base,              // Состояние без активности
-    AwaitingImageAndText,     // Ожидаем изображение для кодирования
-    AwaitingDecodeImage, // Ожидаем изображение для декодирования
+    Base,              // Inactive state
+    AwaitingImageAndText,     // Waiting for image and text to encode
+    AwaitingDecodeImage, // Waiting for image to decode
 }

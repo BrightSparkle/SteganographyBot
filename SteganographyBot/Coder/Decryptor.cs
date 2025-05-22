@@ -56,7 +56,7 @@ public class Decryptor
                 var colors = SteganographyHelper.ToBinary(pixel);
                 //read each pixel rgb first bits
                 bits += SteganographyHelper.ReadFirstBits(colors.red,2) + SteganographyHelper.ReadFirstBits(colors.green,2) + SteganographyHelper.ReadFirstBits(colors.blue,2);
-                //if it isnt default
+                //if it isn't default
 
                     if (bits.Length >= 32)
                     {
