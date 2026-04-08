@@ -10,8 +10,8 @@ namespace SteganographyBot;
 public class CommandHandler
 {
     private readonly Dictionary<long, ChatState> _chatStates;
-    private readonly Dictionary<long, string> _tempPublicKeys;   // chatId -> public key XML
-    private readonly Dictionary<long, string> _tempPrivateKeys;  // chatId -> private key XML
+    private readonly Dictionary<long, string> _tempPublicKeys; 
+    private readonly Dictionary<long, string> _tempPrivateKeys;
     private readonly Encryptor _encryptor;
     private readonly Decryptor _decryptor;
 
@@ -55,7 +55,6 @@ public class CommandHandler
 
     private async Task HandleTextMessage(ITelegramBotClient telegramClient, Update update, long chatId)
     {
-        // Обработка ввода ключей
         if (_chatStates[chatId] == ChatState.AwaitingPublicKeyForEncode)
         {
             _tempPublicKeys[chatId] = update.Message.Text;
@@ -205,7 +204,6 @@ public class CommandHandler
         }
 
         var imageStream = new MemoryStream();
-        // Поддерживаем как Document, так и Photo
         if (update.Message.Document != null)
         {
             var file = await botClient.GetFileAsync(update.Message.Document.FileId);

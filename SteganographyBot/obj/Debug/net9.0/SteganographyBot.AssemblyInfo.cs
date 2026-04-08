@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SteganographyBot")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bd8ac20abbaa777fdb084a2e5c0880a410b568c5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3c15ee2c4c077cdfda31c1a961dd0cdc7b9a2403")]
 [assembly: System.Reflection.AssemblyProductAttribute("SteganographyBot")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SteganographyBot")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

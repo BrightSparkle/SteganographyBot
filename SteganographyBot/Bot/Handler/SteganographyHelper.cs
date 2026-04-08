@@ -6,7 +6,6 @@ namespace StegBot.Bot;
 
 public static class SteganographyHelper
 {
-    // ========== Вспомогательные методы ==========
     private static string ToBinary(byte b) => Convert.ToString(b, 2).PadLeft(8, '0');
 
     public static (string red, string green, string blue) ToBinary(Color color)
@@ -36,13 +35,11 @@ public static class SteganographyHelper
         return list.ToArray();
     }
 
-    // ========== Новые методы для работы с байтами ==========
     public static void EmbedBytes(Bitmap image, byte[] data)
     {
-        // Формируем полные данные: длина (4 байта, big-endian) + сами данные
         byte[] lengthBytes = BitConverter.GetBytes(data.Length);
         if (BitConverter.IsLittleEndian)
-            Array.Reverse(lengthBytes); // приводим к big-endian
+            Array.Reverse(lengthBytes);
 
         byte[] fullData = lengthBytes.Concat(data).ToArray();
         string bits = string.Join("", fullData.Select(b => Convert.ToString(b, 2).PadLeft(8, '0')));
@@ -54,7 +51,6 @@ public static class SteganographyHelper
         string bits = ExtractAllBits(image);
         if (bits.Length < 32) return Array.Empty<byte>();
 
-        // Первые 32 бита — длина данных (big-endian)
         byte[] lengthBytes = new byte[4];
         for (int i = 0; i < 4; i++)
             lengthBytes[i] = Convert.ToByte(bits.Substring(i * 8, 8), 2);
@@ -82,19 +78,16 @@ public static class SteganographyHelper
                 Color pixel = image.GetPixel(x, y);
                 var (rBits, gBits, bBits) = ToBinary(pixel);
 
-                // 2 бита в красный
                 if (bitIndex + 2 <= bits.Length)
                 {
                     rBits = ReplaceFirstBits(rBits, bits.Substring(bitIndex, 2));
                     bitIndex += 2;
                 }
-                // 2 бита в зелёный
                 if (bitIndex + 2 <= bits.Length)
                 {
                     gBits = ReplaceFirstBits(gBits, bits.Substring(bitIndex, 2));
                     bitIndex += 2;
                 }
-                // 2 бита в синий
                 if (bitIndex + 2 <= bits.Length)
                 {
                     bBits = ReplaceFirstBits(bBits, bits.Substring(bitIndex, 2));
