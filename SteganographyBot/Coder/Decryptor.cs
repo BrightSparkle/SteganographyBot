@@ -1,75 +1,63 @@
-using System.Collections;
 using System.Drawing;
-using SteganographyBot.Bot;
+using System.Text;
 using StegBot.Bot;
 
 namespace SteganographyBot;
 
 public class Decryptor
 {
-    private readonly string _startPoint = "@startpoint";
-    private readonly string _endPoint = "@endpoint";
-    public Decryptor()
+    public async Task<string> DecodeImage(Stream image, string privateKeyXml)
     {
-        
-    }
-    
-    
-    public async Task<string> DecodeImage(Stream image)
-    {
-      await image.CopyToAsync(image);
-        Bitmap img = new Bitmap(image);
+        using var img = new Bitmap(image);
 
-        //holds the new bits extract from image
-        string bits = "";
-        string extractedtext = "";
-        bool shouldBreak = false;
-        for (int x = 0; x < img.Width; x++)
+        // 1. Извлекаем байты из LSB
+        byte[] extracted = SteganographyHelper.ExtractBytes(img);
+        if (extracted.Length == 0)
+            return "No hidden data found or the image is corrupted.";
+
+        // 2. Разбираем пакет
+        int offset = 0;
+        if (extracted.Length < 4) return "Invalid package: missing length.";
+        // длина зашифрованного ключа (4 байта, big-endian)
+        byte[] lenBytes = extracted.Take(4).ToArray();
+        if (BitConverter.IsLittleEndian) Array.Reverse(lenBytes);
+        int encryptedKeyLen = BitConverter.ToInt32(lenBytes, 0);
+        offset += 4;
+
+        if (extracted.Length < offset + encryptedKeyLen)
+            return "Invalid package: encrypted key truncated.";
+        byte[] encryptedAesKey = extracted.Skip(offset).Take(encryptedKeyLen).ToArray();
+        offset += encryptedKeyLen;
+
+        if (extracted.Length < offset + 16)
+            return "Invalid package: IV missing.";
+        byte[] aesIv = extracted.Skip(offset).Take(16).ToArray();
+        offset += 16;
+
+        byte[] encryptedMessage = extracted.Skip(offset).ToArray();
+
+        // 3. Расшифровываем AES-ключ через RSA
+        byte[] aesKey;
+        try
         {
-            if (shouldBreak)
-            {
-                break;
-            }
-
-            for (int y = 0; y < img.Height; y++)
-            {
-
-                if (extractedtext.Length >= _startPoint.Length && !extractedtext.Contains(_startPoint))
-                {
-                    //nothin in the picture
-                    shouldBreak = true;
-                    extractedtext = "No content found, Please send image with original format as file.";
-                    break;
-                }
-
-                if (extractedtext.Contains(_endPoint))
-                {
-                    extractedtext = extractedtext
-                        .Replace(_startPoint, string.Empty)
-                        .Replace(_endPoint, string.Empty);
-
-                    shouldBreak = true;
-                    break;
-                }
-
-                Color pixel = img.GetPixel(x, y);
-                var colors = SteganographyHelper.ToBinary(pixel);
-                //read each pixel rgb first bits
-                bits += SteganographyHelper.ReadFirstBits(colors.red,2) + SteganographyHelper.ReadFirstBits(colors.green,2) + SteganographyHelper.ReadFirstBits(colors.blue,2);
-                //if it isn't default
-
-                    if (bits.Length >= 32)
-                    {
-                        extractedtext += SteganographyHelper.GetUnicodeTextFromBinary(bits.Substring(0, 32));
-                        bits = bits.Remove(0, 32);
-                    }
-                    Console.WriteLine(extractedtext);
-                }
-               
-            
+            aesKey = CryptoHelper.RsaDecrypt(encryptedAesKey, privateKeyXml);
+        }
+        catch (Exception ex)
+        {
+            return $"RSA decryption failed: {ex.Message}";
         }
 
-        return extractedtext;
+        // 4. Расшифровываем сообщение
+        byte[] plainMessage;
+        try
+        {
+            plainMessage = CryptoHelper.AesDecrypt(encryptedMessage, aesKey, aesIv);
+        }
+        catch (Exception ex)
+        {
+            return $"AES decryption failed: {ex.Message}";
+        }
+
+        return Encoding.UTF8.GetString(plainMessage);
     }
-    
 }
